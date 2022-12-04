@@ -41,17 +41,28 @@ parse str =
         |> List.foldr toGroupedLists []
 
 
-foldMax : List Int -> Int -> Int
-foldMax xs acc =
-    max (List.sum xs) acc
+desc : Int -> Int -> Order
+desc a b =
+    case compare a b of
+        LT ->
+            GT
+
+        EQ ->
+            EQ
+
+        GT ->
+            LT
 
 
-findMaximum : List (List Int) -> Int
-findMaximum =
-    List.foldl foldMax 0
+toTopThreeSum : List (List Int) -> Int
+toTopThreeSum xs =
+    List.map List.sum xs
+        |> List.sortWith desc
+        |> List.take 3
+        |> List.sum
 
 
 init : Int
 init =
     parse input
-        |> findMaximum
+        |> toTopThreeSum
