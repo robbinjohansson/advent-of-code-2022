@@ -1,4 +1,7 @@
-module Dec2 exposing (init)
+module Dec2 exposing
+    ( initWithFormula
+    , initWithoutFormula
+    )
 
 
 type RockPaperScissors
@@ -117,21 +120,73 @@ toRoundSummary =
     Tuple.mapBoth stringToRPS stringToRPS >> combineMaybes
 
 
+toRoundSummaryWithFormula : ( String, String ) -> Maybe RoundSummary
+toRoundSummaryWithFormula ( opponent, player ) =
+    case ( opponent, player ) of
+        ( "A", "X" ) ->
+            Just ( Rock, Scissors )
+
+        ( "A", "Y" ) ->
+            Just ( Rock, Rock )
+
+        ( "A", "Z" ) ->
+            Just ( Rock, Paper )
+
+        ( "B", "X" ) ->
+            Just ( Paper, Rock )
+
+        ( "B", "Y" ) ->
+            Just ( Paper, Paper )
+
+        ( "B", "Z" ) ->
+            Just ( Paper, Scissors )
+
+        ( "C", "X" ) ->
+            Just ( Scissors, Paper )
+
+        ( "C", "Y" ) ->
+            Just ( Scissors, Scissors )
+
+        ( "C", "Z" ) ->
+            Just ( Scissors, Rock )
+
+        _ ->
+            Nothing
+
+
 toPlayerRoundScore : RoundSummary -> Int
-toPlayerRoundScore (( _, playerRPS ) as summary) =
-    (toPlayerOutcome summary |> playerOutcomeToInt) + rpsToInt playerRPS
+toPlayerRoundScore summary =
+    let
+        playerOutcomeScore =
+            toPlayerOutcome summary
+                |> playerOutcomeToInt
+
+        ( _, rpsScore ) =
+            Tuple.mapSecond rpsToInt summary
+    in
+    playerOutcomeScore + rpsScore
 
 
-parse : String -> List RoundSummary
-parse str =
+parse : String -> (( String, String ) -> Maybe RoundSummary) -> List RoundSummary
+parse str f =
     String.trim str
         |> String.lines
         |> List.foldl toGroupedStrings []
-        |> List.filterMap toRoundSummary
+        |> List.filterMap f
 
 
-init : Int
-init =
-    parse input
+init : (( String, String ) -> Maybe RoundSummary) -> Int
+init f =
+    parse input f
         |> List.map toPlayerRoundScore
         |> List.sum
+
+
+initWithFormula : Int
+initWithFormula =
+    init toRoundSummaryWithFormula
+
+
+initWithoutFormula : Int
+initWithoutFormula =
+    init toRoundSummary
