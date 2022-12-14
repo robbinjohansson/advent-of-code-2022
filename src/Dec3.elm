@@ -1,4 +1,7 @@
-module Dec3 exposing (init)
+module Dec3 exposing
+    ( part1
+    , part2
+    )
 
 import Set exposing (Set)
 
@@ -15,13 +18,11 @@ CrZsJsPPZsGzwwsLwLmpwMDw
 """
 
 
-toListOfSets : String -> List ( Set Char, Set Char ) -> List ( Set Char, Set Char )
-toListOfSets str acc =
+toListOfSets : List Char -> List ( Set Char, Set Char ) -> List ( Set Char, Set Char )
+toListOfSets xs acc =
     let
-        ( delimiter, xs ) =
-            ( String.length str // 2
-            , String.toList str
-            )
+        delimiter =
+            List.length xs // 2
     in
     ( List.take delimiter xs |> Set.fromList
     , List.drop delimiter xs |> Set.fromList
@@ -29,18 +30,15 @@ toListOfSets str acc =
         :: acc
 
 
-parse : String -> Int
+parse : String -> List (List Char)
 parse str =
     String.trim str
         |> String.lines
-        |> List.foldl toListOfSets []
-        |> List.concatMap toListOfDuplicates
-        |> List.map toPriority
-        |> List.sum
+        |> List.map String.toList
 
 
-toListOfDuplicates : ( Set Char, Set Char ) -> List Char
-toListOfDuplicates =
+toListOfCommonChars : ( Set Char, Set Char ) -> List Char
+toListOfCommonChars =
     uncurry Set.intersect >> Set.toList
 
 
@@ -212,6 +210,42 @@ toPriority str =
             0
 
 
-init : Int
-init =
+toGroups : List a -> List (List a)
+toGroups xs =
+    case xs of
+        [] ->
+            []
+
+        _ ->
+            List.take 3 xs :: toGroups (List.drop 3 xs)
+
+
+toMaybeCommonChar : List (List Char) -> Maybe Char
+toMaybeCommonChar xs =
+    case List.map Set.fromList xs of
+        [ x1, x2, x3 ] ->
+            Set.intersect x1 x2
+                |> Set.intersect x3
+                |> Set.toList
+                |> List.head
+
+        _ ->
+            Nothing
+
+
+part1 : Int
+part1 =
     parse input
+        |> List.foldl toListOfSets []
+        |> List.concatMap toListOfCommonChars
+        |> List.map toPriority
+        |> List.sum
+
+
+part2 : Int
+part2 =
+    parse input
+        |> toGroups
+        |> List.filterMap toMaybeCommonChar
+        |> List.map toPriority
+        |> List.sum
